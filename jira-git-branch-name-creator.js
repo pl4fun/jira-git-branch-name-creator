@@ -89,7 +89,7 @@ function addBranchButton() {
         ).innerText;
         const jiraId = lastBreadcrumbsContainer.innerText;
 
-        copy(${jiraId}-${_.kebabCase(jiraTitle)});
+        copy(`${jiraId}-${_.kebabCase(jiraTitle)}`);
     }
 
     function copy(value) {
@@ -114,7 +114,7 @@ function addBranchButton() {
     $("#create-branch-name").on("click", () => {
         createBranchName();
         $(".copy-branch-btn-wrapper").append(
-            <span id="copied-txt" style="position: absolute; top: 0; left: 60%; color: green;">Copied</span>
+            `<span id="copied-txt" style="position: absolute; top: 0; left: 60%; color: green;">Copied</span>`
         );
         setTimeout(() => $("#copied-txt").remove(), 3000);
     });
