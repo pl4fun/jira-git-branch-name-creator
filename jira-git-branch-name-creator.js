@@ -2,12 +2,9 @@
 // @name         JIRA branch name generator
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @author       You
+// @author       https://github.com/pl4fun
 // @match        https://*.atlassian.net/*
-// @require http://code.jquery.com/jquery-latest.js
-// @require https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js
-// @require https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.min.js
-// @grant          GM_addStyle
+// @grant        GM_addStyle
 // ==/UserScript==
 
 function GM_addStyle(css) {
@@ -74,62 +71,80 @@ GM_addStyle(`
 }
 `);
 
+let currentURL = window.location.href;
+let oldURL = "";
+let interval;
+
 function addBranchButton() {
     "use strict";
 
-    const lastBreadcrumbsContainer = _.last(
-        document.querySelectorAll('div[data-test-id*="breadcrumbs"]')
-    );
+    const breadcrumbsContainers = document.querySelectorAll('div[data-test-id*="breadcrumbs"]');
+    const lastBreadcrumbsContainer = breadcrumbsContainers[breadcrumbsContainers.length - 1];
+    const createBranchButton = document.getElementById("create-branch-name");
 
-    function createBranchName() {
-        const jiraTitle = _.first(
-            document.querySelectorAll(
-                'h1[data-test-id*="issue.views.issue-base.foundation.summary.heading"]'
-            )
-        ).innerText;
+    const copy = (value) => {
+        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(value);
+        }
+        return Promise.reject('The Clipboard API is not available.');
+    }
+
+    const createBranchName = () => {
+        const jiraTitle = document.querySelectorAll('h1[data-test-id*="issue.views.issue-base.foundation.summary.heading"]')[0].innerText;
         const jiraId = lastBreadcrumbsContainer.innerText;
 
-        copy(`${jiraId}-${_.kebabCase(jiraTitle)}`);
+        const kebabCase = (string) => string
+            .replace(/([a-z])([A-Z])/g, "$1-$2")
+            .replace(/[",'.-]+/g, '')
+            .replace(/[\s_]+/g, '-')
+            .toLowerCase();
+
+        copy(`${jiraId}-${kebabCase(jiraTitle)}`);
     }
 
-    function copy(value) {
-        const copyText = document.querySelector("#copy-branch-name");
-        copyText.value = value;
-        copyText.select();
-        document.execCommand("copy");
-    }
-
-    const existingButton = document.querySelector(".branch-name-ge");
-    if (!_.isNil(existingButton)) {
-        existingButton.remove();
-    }
-
-    $(lastBreadcrumbsContainer).append(`
-            <div class="copy-branch-btn-wrapper branch-name-ge">
-               <input type="button" class="create-branch-btn" value="Copy branch name" id="create-branch-name">
-               <textarea style="opacity: 0" id="copy-branch-name">
-            </div>
-    `);
-
-    $("#create-branch-name").on("click", () => {
+    const showCopiedText = () => {
         createBranchName();
-        $(".copy-branch-btn-wrapper").append(
-            `<span id="copied-txt" style="position: absolute; top: 0; left: 60%; color: green;">Copied</span>`
-        );
-        setTimeout(() => $("#copied-txt").remove(), 3000);
-    });
-}
-addBranchButton();
 
-let oldURL = "";
-let currentURL = window.location.href;
+        const buttonCopyWrapper = document.querySelector(".copy-branch-btn-wrapper");
+
+        let copiedTextNotation = document.createElement("span");
+        copiedTextNotation.id = "copied-txt";
+        copiedTextNotation.style.position = "absolute";
+        copiedTextNotation.style.top = "1px";
+        copiedTextNotation.style.left = "120%";
+        copiedTextNotation.style.color = "green";
+        copiedTextNotation.innerHTML = `Copied`;
+
+        buttonCopyWrapper.append(copiedTextNotation);
+
+        setTimeout(() => copiedTextNotation.remove(), 3000);
+    }
+
+    let copiedButton = document.createElement("div");
+    copiedButton.classList.add("copy-branch-btn-wrapper", "branch-name-ge");
+    copiedButton.innerHTML = `<input type="button" class="create-branch-btn" value="Copy branch name" id="create-branch-name">`;
+
+    if (lastBreadcrumbsContainer && !createBranchButton) {
+        lastBreadcrumbsContainer.append(copiedButton);
+    }
+
+    if (!!createBranchButton) {
+        clearInterval(interval);
+        createBranchButton.addEventListener('click', showCopiedText);
+    } else {
+        clearInterval(interval);
+        interval = setInterval(addBranchButton, 300);
+    }
+}
+
 function checkURLChange(currentURL) {
-    if (currentURL != oldURL) {
+    if (currentURL !== oldURL) {
         addBranchButton();
         oldURL = currentURL;
     } else {
-        const branchNameGeButton = document.querySelector(".branch-name-ge");
-        if (!branchNameGeButton) {
+        const isBranchNameButtonExist = !!document.querySelector(".branch-name-ge");
+
+        if (!isBranchNameButtonExist) {
             addBranchButton();
         }
     }
@@ -140,4 +155,5 @@ function checkURLChange(currentURL) {
     }, 1000);
 }
 
-checkURLChange();
+addBranchButton();
+checkURLChange(currentURL);
