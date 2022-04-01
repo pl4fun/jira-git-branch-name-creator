@@ -95,7 +95,7 @@ function addBranchButton() {
 
         const kebabCase = (string) => string
             .replace(/([a-z])([A-Z])/g, "$1-$2")
-            .replace(/[",'.-]+/g, '')
+            .replace(/[",:/\[\]'.-]+/g, '')
             .replace(/[\s_]+/g, '-')
             .toLowerCase();
 
