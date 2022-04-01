@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JIRA branch name generator
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @author       https://github.com/pl4fun
 // @match        https://*.atlassian.net/*
 // @grant        GM_addStyle
