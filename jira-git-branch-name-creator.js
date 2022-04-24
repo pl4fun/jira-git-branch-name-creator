@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JIRA branch name generator
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @author       https://github.com/pl4fun
 // @match        https://*.atlassian.net/*
 // @grant        GM_addStyle
@@ -95,7 +95,7 @@ function addBranchButton() {
 
         const kebabCase = (string) => string
             .replace(/([a-z])([A-Z])/g, "$1-$2")
-            .replace(/[",:/\[\]'.-]+/g, '')
+            .replace(/[",:/\[\]'.-)(]+/g, '')
             .replace(/[\s_]+/g, '-')
             .toLowerCase();
 
