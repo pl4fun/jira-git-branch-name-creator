@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JIRA branch name generator
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @author       https://github.com/pl4fun
 // @match        https://*.atlassian.net/*
 // @grant        GM_addStyle
@@ -25,12 +25,12 @@ GM_addStyle(`
 .copy-branch-btn-wrapper {
     display: flex;
     position: relative !important;
-}
-`);
+    transition: background 0.1s ease-out;
+}`);
 
 GM_addStyle(`
 .create-branch-btn {
-    padding: 0 1em;
+    padding: 8px 12px;
     margin: 0 1em;
     cursor: pointer;
     -webkit-box-align: baseline;
@@ -39,7 +39,7 @@ GM_addStyle(`
     display: inline-flex;
     font-size: inherit;
     font-style: normal;
-    font-weight: normal;
+    font-weight: 500;
     max-width: 100%;
     text-align: center;
     white-space: nowrap;
@@ -54,22 +54,20 @@ GM_addStyle(`
     border-radius: 3px;
     transition: background 0.1s ease-out 0s, box-shadow 0.15s cubic-bezier(0.47, 0.03, 0.49, 1.38) 0s;
     outline: none !important;
-    position: relavent;
+    box-shadow: 0 0 1px 1px rgba(9,30,66,0.13);
 }`);
 
 GM_addStyle(`
 .create-branch-btn:hover {
     color: rgb(23, 43, 77) !important;
     background: rgb(223, 225, 230) !important;
-}
-`);
+}`);
 
 GM_addStyle(`
 .create-branch-btn:active, .create-branch-btn:focus {
     color: rgb(0, 82, 204) !important;
     background: rgba(179, 212, 255, 0.6);
-}
-`);
+}`);
 
 GM_addStyle(`
 .drop-list-possible-name-prefixes {
@@ -77,20 +75,28 @@ GM_addStyle(`
     right: 14px;
     border-radius: 3px;
     background: rgb(255, 255, 255);
-    z-index: 10;
+    z-index: 100;
     box-shadow: rgb(9 30 66 / 8%) 0px 0px 0px 1px, rgb(9 30 66 / 8%) 0px 2px 1px, rgb(9 30 66 / 31%) 0px 0px 20px -6px;
     display: none;
     flex-direction: column;
-    width: 146px;
-    margin-top: 24px;
-}
-`);
+    width: 142px;
+    margin-top: 44px;
+    box-sizing: border-box;
+}`);
 
 GM_addStyle(`
-.copy-branch-btn-wrapper:hover .drop-list-possible-name-prefixes {
+.drop-list-possible-name-prefixes:before {
+    content: "";
+    width: 100%;
+    height: 12px;
+    position: absolute;
+    top: -10px;
+}`);
+
+GM_addStyle(`
+.copy-branch-btn-wrapper:hover .drop-list-possible-name-prefixes, .drop-list-possible-name-prefixes:hover {
     display: flex;
-}
-`);
+}`);
 
 GM_addStyle(`
 .drop-list-prefix-item {
@@ -114,15 +120,27 @@ GM_addStyle(`
     background: #ffffff;
     transition: background 0.1s ease-out;
     outline: none !important;
-}
-`);
+}`);
 
 GM_addStyle(`
 .drop-list-prefix-item:hover {
     background: #0052cc;
     color: #ffffff;
-}
-`);
+}`);
+
+GM_addStyle(`
+[data-test-id="issue.views.issue-base.foundation.breadcrumbs.breadcrumb-parent-issue-container"], [data-test-id="issue.views.issue-base.foundation.breadcrumbs.breadcrumb-current-issue-container"] {
+    align-items: center;
+}`);
+
+GM_addStyle(`
+.drop-list-optional {
+    all: unset;
+    padding: 4px 0;
+    text-align: center;
+    font-size: 12px;
+    color: #ff6c4a;
+}`);
 
 let currentURL = window.location.href;
 let oldURL = "";
@@ -185,6 +203,7 @@ function addBranchButton() {
     copiedButton.classList.add("copy-branch-btn-wrapper", "branch-name-ge");
     copiedButton.innerHTML = `<input type="button" class="create-branch-btn" value="Copy branch name" id="create-branch-name">
                               <div class="drop-list-possible-name-prefixes" id="drop-list-possible-name-prefixes">
+                                  <input type="button" class="drop-list-optional" value="Select prefix(optional)">
                                   <input type="button" class="drop-list-prefix-item" id="feature-prefix-item" value="Feature">
                                   <input type="button" class="drop-list-prefix-item" id="bug-prefix-item" value="Bug">
                                   <input type="button" class="drop-list-prefix-item" id="hotfix-prefix-item" value="Hotfix">
