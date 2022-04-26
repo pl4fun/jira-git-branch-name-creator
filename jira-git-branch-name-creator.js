@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JIRA branch name generator
 // @namespace    http://tampermonkey.net/
-// @version      0.3
+// @version      0.4
 // @author       https://github.com/pl4fun
 // @match        https://*.atlassian.net/*
 // @grant        GM_addStyle
@@ -24,7 +24,7 @@ function GM_addStyle(css) {
 GM_addStyle(`
 .copy-branch-btn-wrapper {
     display: flex;
-    position: relative;
+    position: relative !important;
 }
 `);
 
@@ -71,6 +71,59 @@ GM_addStyle(`
 }
 `);
 
+GM_addStyle(`
+.drop-list-possible-name-prefixes {
+    position: absolute;
+    right: 14px;
+    border-radius: 3px;
+    background: rgb(255, 255, 255);
+    z-index: 10;
+    box-shadow: rgb(9 30 66 / 8%) 0px 0px 0px 1px, rgb(9 30 66 / 8%) 0px 2px 1px, rgb(9 30 66 / 31%) 0px 0px 20px -6px;
+    display: none;
+    flex-direction: column;
+    width: 146px;
+    margin-top: 24px;
+}
+`);
+
+GM_addStyle(`
+.copy-branch-btn-wrapper:hover .drop-list-possible-name-prefixes {
+    display: flex;
+}
+`);
+
+GM_addStyle(`
+.drop-list-prefix-item {
+    padding: 8px 12px;
+    border-radius: 3px;
+    font-weight: 600;
+    color: #42526E;
+    cursor: pointer;
+    margin: 0;
+    -webkit-box-align: baseline;
+    align-items: baseline;
+    box-sizing: border-box;
+    display: inline-flex;
+    font-size: inherit;
+    font-style: normal;
+    text-align: left;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-width: 0px;
+    text-decoration: none;
+    background: #ffffff;
+    transition: background 0.1s ease-out;
+    outline: none !important;
+}
+`);
+
+GM_addStyle(`
+.drop-list-prefix-item:hover {
+    background: #0052cc;
+    color: #ffffff;
+}
+`);
+
 let currentURL = window.location.href;
 let oldURL = "";
 let interval;
@@ -81,6 +134,10 @@ function addBranchButton() {
     const breadcrumbsContainers = document.querySelectorAll('div[data-test-id*="breadcrumbs"]');
     const lastBreadcrumbsContainer = breadcrumbsContainers[breadcrumbsContainers.length - 1];
     const createBranchButton = document.getElementById("create-branch-name");
+    const featureCreateBranchButton = document.getElementById("feature-prefix-item");
+    const bugCreateBranchButton = document.getElementById("bug-prefix-item");
+    const hotfixCreateBranchButton = document.getElementById("hotfix-prefix-item");
+    const releaseCreateBranchButton = document.getElementById("release-prefix-item");
 
     const copy = (value) => {
         if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
@@ -89,21 +146,25 @@ function addBranchButton() {
         return Promise.reject('The Clipboard API is not available.');
     }
 
-    const createBranchName = () => {
+    const createBranchName = (prefix) => {
         const jiraTitle = document.querySelectorAll('h1[data-test-id*="issue.views.issue-base.foundation.summary.heading"]')[0].innerText;
         const jiraId = lastBreadcrumbsContainer.innerText;
 
         const kebabCase = (string) => string
             .replace(/([a-z])([A-Z])/g, "$1-$2")
-            .replace(/[",:/\[\]'.-)(]+/g, '')
+            .replace(/[",:/\[\]'.-/(/)]+/g, '')
             .replace(/[\s_]+/g, '-')
             .toLowerCase();
 
-        copy(`${jiraId}-${kebabCase(jiraTitle)}`);
+        if (typeof prefix === 'string') {
+            copy(`${prefix}/${jiraId}-${kebabCase(jiraTitle)}`)
+        } else {
+            copy(`${jiraId}-${kebabCase(jiraTitle)}`)
+        }
     }
 
-    const showCopiedText = () => {
-        createBranchName();
+    const showCopiedText = (prefix) => {
+        createBranchName(prefix);
 
         const buttonCopyWrapper = document.querySelector(".copy-branch-btn-wrapper");
 
@@ -122,7 +183,13 @@ function addBranchButton() {
 
     let copiedButton = document.createElement("div");
     copiedButton.classList.add("copy-branch-btn-wrapper", "branch-name-ge");
-    copiedButton.innerHTML = `<input type="button" class="create-branch-btn" value="Copy branch name" id="create-branch-name">`;
+    copiedButton.innerHTML = `<input type="button" class="create-branch-btn" value="Copy branch name" id="create-branch-name">
+                              <div class="drop-list-possible-name-prefixes" id="drop-list-possible-name-prefixes">
+                                  <input type="button" class="drop-list-prefix-item" id="feature-prefix-item" value="Feature">
+                                  <input type="button" class="drop-list-prefix-item" id="bug-prefix-item" value="Bug">
+                                  <input type="button" class="drop-list-prefix-item" id="hotfix-prefix-item" value="Hotfix">
+                                  <input type="button" class="drop-list-prefix-item" id="release-prefix-item" value="Release">
+                              </div>`;
 
     if (lastBreadcrumbsContainer && !createBranchButton) {
         lastBreadcrumbsContainer.append(copiedButton);
@@ -130,7 +197,12 @@ function addBranchButton() {
 
     if (!!createBranchButton) {
         clearInterval(interval);
+
         createBranchButton.addEventListener('click', showCopiedText);
+        featureCreateBranchButton.addEventListener('click', () => showCopiedText('feature'));
+        bugCreateBranchButton.addEventListener('click', () => showCopiedText('bug'));
+        hotfixCreateBranchButton.addEventListener('click', () => showCopiedText('hotfix'));
+        releaseCreateBranchButton.addEventListener('click', () => showCopiedText('release'));
     } else {
         clearInterval(interval);
         interval = setInterval(addBranchButton, 300);
