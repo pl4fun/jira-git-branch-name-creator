@@ -31,4 +31,14 @@
 
   ![Create branch name](./copied.png "Copied branch name")
 
-Now the the branch name is in your clipboard 🥳🎉🎆
+# 7. Now you can choose a prefix for the brunch, just select the prefix you want to add
+
+Now you have the branch name in the Clipboard in format: `<issue type>/<issue id>-<issue name>`
+
+For example: `bug/COS-1616-bla-bla-bla`
+
+![Prefix for branch name](./prefix.png "Select prefix")
+
+![Prefix for branch name](./prefix2.png "Copied branch name with prefix")
+
+Now the branch name is in your clipboard 🥳🎉🎆
