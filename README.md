@@ -41,4 +41,4 @@ For example: `bug/COS-1616-bla-bla-bla`
 
 ![Prefix for branch name](./prefix2.png "Copied branch name with prefix")
 
-You are cool 😎
+You are cool 😎🤓🥸
