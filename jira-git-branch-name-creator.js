@@ -162,7 +162,7 @@ function addBranchButton() {
     const lastBreadcrumbsContainer = breadcrumbsContainers[breadcrumbsContainers.length - 1];
     const createBranchButton = document.getElementById("create-branch-name");
     const featureCreateBranchButton = document.getElementById("feature-prefix-item");
-    const noPrefixCreateBranchButton = document.getElementById("no-prefix-item");
+    const inferPrefixCreateBranchButton = document.getElementById("infer-prefix-item");
     const bugCreateBranchButton = document.getElementById("bug-prefix-item");
     const hotfixCreateBranchButton = document.getElementById("hotfix-prefix-item");
     const releaseCreateBranchButton = document.getElementById("release-prefix-item");
@@ -233,7 +233,7 @@ function addBranchButton() {
     copiedButton.innerHTML = `<input type="button" class="create-branch-btn" value="Copy branch name" id="create-branch-name">
                               <div class="drop-list-possible-name-prefixes" id="drop-list-possible-name-prefixes">
                                   <input type="button" class="drop-list-optional" value="Select prefix(optional)">
-                                  <input type="button" class="drop-list-prefix-item" id="no-prefix-item" value="No prefix">
+                                  <input type="button" class="drop-list-prefix-item" id="infer-prefix-item" value="From issue type">
                                   <input type="button" class="drop-list-prefix-item" id="feature-prefix-item" value="Feature">
                                   <input type="button" class="drop-list-prefix-item" id="bug-prefix-item" value="Bug">
                                   <input type="button" class="drop-list-prefix-item" id="hotfix-prefix-item" value="Hotfix">
@@ -247,8 +247,8 @@ function addBranchButton() {
     if (!!createBranchButton) {
         clearInterval(interval);
 
-        createBranchButton.addEventListener('click', () => showCopiedText());
-        noPrefixCreateBranchButton.addEventListener('click', () => showCopiedText(''));
+        createBranchButton.addEventListener('click', () => showCopiedText(''));
+        inferPrefixCreateBranchButton.addEventListener('click', () => showCopiedText());
         featureCreateBranchButton.addEventListener('click', () => showCopiedText('feature'));
         bugCreateBranchButton.addEventListener('click', () => showCopiedText('bug'));
         hotfixCreateBranchButton.addEventListener('click', () => showCopiedText('hotfix'));
