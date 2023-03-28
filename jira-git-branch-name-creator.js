@@ -7,6 +7,15 @@
 // @grant        GM_addStyle
 // ==/UserScript==
 
+/**
+ * Edit this map to configure you own mappings between issue types and branch prefixes.
+ * Keys are matched agains lowercased issue type name.
+ */
+const issueTypeIncludesToBranchPrefixMap = {
+    story: 'feature',
+    bug: 'bugfix'
+}
+
 function GM_addStyle(css) {
     const style =
         document.getElementById("GM_addStyleBy8626") ||
@@ -153,6 +162,7 @@ function addBranchButton() {
     const lastBreadcrumbsContainer = breadcrumbsContainers[breadcrumbsContainers.length - 1];
     const createBranchButton = document.getElementById("create-branch-name");
     const featureCreateBranchButton = document.getElementById("feature-prefix-item");
+    const inferPrefixCreateBranchButton = document.getElementById("infer-prefix-item");
     const bugCreateBranchButton = document.getElementById("bug-prefix-item");
     const hotfixCreateBranchButton = document.getElementById("hotfix-prefix-item");
     const releaseCreateBranchButton = document.getElementById("release-prefix-item");
@@ -164,9 +174,21 @@ function addBranchButton() {
         return Promise.reject('The Clipboard API is not available.');
     }
 
+    const getPrefixFromIssueType = (issueType) => {
+        const lowerType = issueType.toLowerCase()
+        for(const key in issueTypeIncludesToBranchPrefixMap) {
+            if(lowerType.includes(key)) {
+                return issueTypeIncludesToBranchPrefixMap[key];
+            }
+        }
+        return undefined;
+    }
+
     const createBranchName = (prefix) => {
         const jiraTitle = document.querySelectorAll('h1[data-test-id*="issue.views.issue-base.foundation.summary.heading"]')[0].innerText;
         const jiraId = lastBreadcrumbsContainer.innerText;
+        const jiraIssueTypeIcon = lastBreadcrumbsContainer.querySelector('img');
+        const jiraIssueType = jiraIssueTypeIcon && jiraIssueTypeIcon.getAttribute('alt');
 
         const kebabCase = (string) => string
             .replace(/([a-z])([A-Z])/g, "$1-$2")
@@ -174,25 +196,32 @@ function addBranchButton() {
             .replace(/[\s_]+/g, '-')
             .toLowerCase();
 
-        if (typeof prefix === 'string') {
+        if(prefix === undefined && jiraIssueType) {
+            prefix = getPrefixFromIssueType(jiraIssueType);
+        }
+
+        if (prefix) {
             copy(`${prefix}/${jiraId}-${kebabCase(jiraTitle)}`)
         } else {
             copy(`${jiraId}-${kebabCase(jiraTitle)}`)
         }
+
+        return prefix;
     }
 
     const showCopiedText = (prefix) => {
-        createBranchName(prefix);
+        const finalPrefix = createBranchName(prefix);
 
         const buttonCopyWrapper = document.querySelector(".copy-branch-btn-wrapper");
 
         let copiedTextNotation = document.createElement("span");
         copiedTextNotation.id = "copied-txt";
         copiedTextNotation.style.position = "absolute";
+        copiedTextNotation.style.whiteSpace = "nowrap";
         copiedTextNotation.style.top = "1px";
         copiedTextNotation.style.left = "120%";
         copiedTextNotation.style.color = "green";
-        copiedTextNotation.innerHTML = `Copied`;
+        copiedTextNotation.innerHTML = `Copied${finalPrefix ? ` (${finalPrefix})` : ''}`;
 
         buttonCopyWrapper.append(copiedTextNotation);
 
@@ -204,6 +233,7 @@ function addBranchButton() {
     copiedButton.innerHTML = `<input type="button" class="create-branch-btn" value="Copy branch name" id="create-branch-name">
                               <div class="drop-list-possible-name-prefixes" id="drop-list-possible-name-prefixes">
                                   <input type="button" class="drop-list-optional" value="Select prefix(optional)">
+                                  <input type="button" class="drop-list-prefix-item" id="infer-prefix-item" value="From issue type">
                                   <input type="button" class="drop-list-prefix-item" id="feature-prefix-item" value="Feature">
                                   <input type="button" class="drop-list-prefix-item" id="bug-prefix-item" value="Bug">
                                   <input type="button" class="drop-list-prefix-item" id="hotfix-prefix-item" value="Hotfix">
@@ -217,7 +247,8 @@ function addBranchButton() {
     if (!!createBranchButton) {
         clearInterval(interval);
 
-        createBranchButton.addEventListener('click', showCopiedText);
+        createBranchButton.addEventListener('click', () => showCopiedText(''));
+        inferPrefixCreateBranchButton.addEventListener('click', () => showCopiedText());
         featureCreateBranchButton.addEventListener('click', () => showCopiedText('feature'));
         bugCreateBranchButton.addEventListener('click', () => showCopiedText('bug'));
         hotfixCreateBranchButton.addEventListener('click', () => showCopiedText('hotfix'));
