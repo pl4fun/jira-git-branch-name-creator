@@ -192,7 +192,7 @@ function addBranchButton() {
 
         const kebabCase = (string) => string
             .replace(/([a-z])([A-Z])/g, "$1-$2")
-            .replace(/[",:/\[\]'./(/)-]+/g, '')
+            .replace(/[",:/\[\]'./(/)-<>]+/g, '')
             .replace(/[\s_]+/g, '-')
             .toLowerCase();
 
@@ -201,9 +201,9 @@ function addBranchButton() {
         }
 
         if (prefix) {
-            copy(`${prefix}/${jiraId}-${kebabCase(jiraTitle)}`)
+            copy(`${prefix}/${jiraId}_${kebabCase(jiraTitle)}`)
         } else {
-            copy(`${jiraId}-${kebabCase(jiraTitle)}`)
+            copy(`${jiraId}_${kebabCase(jiraTitle)}`)
         }
 
         return prefix;
